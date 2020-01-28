@@ -11,6 +11,11 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0 # Program counter/accumalator
 
+        ########## INSTRUCTION HANDLERS ##########
+        self.LDI = 0b10000010
+        self.PRN = 0b01000111
+        self.HLT = 0b00000001
+
     def load(self):
         """Load a program into memory."""
 
@@ -75,18 +80,19 @@ class CPU:
         while True:
             # Instruction Register (IR)
             IR = self.ram_read(self.pc)
+
             # Set the value of a register to an integer.
-            if IR == 0b10000010: # LDI
+            if IR is self.LDI:
                 operand_a = self.ram_read(self.pc + 1)
                 operand_b = self.ram_read(self.pc + 2)
                 self.reg[operand_a] = operand_b
                 self.pc += 3
             # Print to the console the decimal integer value that is stored in the given register.
-            elif IR == 0b01000111: # PRN
+            elif IR is self.PRN:
                 print(self.reg[operand_a])
                 self.pc += 2
             # Halt the CPU (and exit the emulator)
-            elif IR == 0b00000001: # HLT
+            elif IR is self.HLT:
                 break
             else:
                 print(f'Error: Unknown command: {IR}')
