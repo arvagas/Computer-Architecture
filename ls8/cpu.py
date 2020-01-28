@@ -2,6 +2,14 @@
 
 import sys
 
+alu_dict = {
+    0b10100000: 'ADD',
+    0b10100001: 'SUB',
+    0b10100010: 'MUL',
+    0b10100011: 'DIV',
+    0b10100100: 'MOD'
+}
+
 class CPU:
     """Main CPU class."""
 
@@ -49,8 +57,29 @@ class CPU:
         """ALU operations."""
 
         if op == "ADD":
+            # Add the value in two registers and store the result in registerA
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        elif op == "SUB":
+            # Subtract the value in the second register from the first, storing
+            # the result in registerA
+            self.reg[reg_a] -= self.reg[reg_b]
+        elif op == 'MUL':
+            # Multiply the values in two registers together and store the
+            # result in registerA
+            self.reg[reg_a] *= self.reg[reg_b]
+        elif op == 'DIV':
+            # Divide the value in the first register by the value in the second,
+            # storing the result in registerA
+            self.reg[reg_a] /= self.reg[reg_b]
+        elif op == 'MOD':
+            # Divide the value in the first register by the value in the second,
+            # storing the remainder of the result in registerA
+            # If the value in the second register is 0, the system should print
+            # an error message and halt.
+            if reg_b is not 0:
+                self.reg[reg_a] %= self.reg[reg_b]
+            else:
+                sys.exit('Second value can not be zero.')
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -74,39 +103,37 @@ class CPU:
 
         print()
 
-    # Memory Address Register (MAR) refers to the address that is being read/written to
+    # Memory Address Register: address that is being read/written to
     def ram_read(self, MAR):
         return self.ram[MAR]
 
-    # Memory Data Register (MDR) refers to the data that was read/data to write
+    # Memory Data Register: data that was read/data to write
     def ram_write(self, MAR, MDR):
         self.ram[MAR] = MDR
 
+    # Set the value of a register to an integer.
+
     def run(self):
         """Run the CPU."""
-
         while True:
             # Instruction Register (IR)
             IR = self.ram_read(self.pc)
-
-            # Set the value of a register to an integer.
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+            
             if IR is self.LDI:
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
                 self.reg[operand_a] = operand_b
                 self.pc += 3
-            # Multiply the values in two registers together and store the result in registerA
-            elif IR is self.MUL:
-                operand_a = self.ram_read(self.pc + 1)
-                operand_b = self.ram_read(self.pc + 2)
-                self.reg[operand_a] = self.reg[operand_a] * self.reg[operand_b]
-                self.pc += 3
-            # Print to the console the decimal integer value that is stored in the given register.
             elif IR is self.PRN:
+                # Print to the console the decimal integer value that is
+                # stored in the given register.
                 print(self.reg[operand_a])
                 self.pc += 2
-            # Halt the CPU (and exit the emulator)
+            elif IR in alu_dict:
+                self.alu(alu_dict[IR], operand_a, operand_b)
+                self.pc += 3
             elif IR is self.HLT:
+                # Halt the CPU (and exit the emulator)
                 break
             else:
                 print(f'Error: Unknown command: {IR}')
