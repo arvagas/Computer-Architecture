@@ -7,9 +7,9 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.ram = [0] * 256
+        self.ram = [0] * 256 # Allocates 256 bytes of memory
         self.reg = [0] * 8
-        self.pc = 0
+        self.pc = 0 # Program counter/accumalator
 
     def load(self):
         """Load a program into memory."""
@@ -62,14 +62,32 @@ class CPU:
 
         print()
 
-    def run(self):
-        """Run the CPU."""
-        pass
-    
     # Memory Address Register (MAR) refers to the address that is being read/written to
-    # Memory Data Register (MDR) refers to the data that was read/data to write
     def ram_read(self, MAR):
         return self.ram[MAR]
 
+    # Memory Data Register (MDR) refers to the data that was read/data to write
     def ram_write(self, MAR, MDR):
         self.ram[MAR] = MDR
+
+    def run(self):
+        """Run the CPU."""
+        while True:
+            # Instruction Register (IR)
+            IR = self.ram_read(self.pc)
+            # Set the value of a register to an integer.
+            if IR == 0b10000010: # LDI
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+                self.reg[operand_a] = operand_b
+                self.pc += 3
+            # Print to the console the decimal integer value that is stored in the given register.
+            elif IR == 0b01000111: # PRN
+                print(self.reg[operand_a])
+                self.pc += 2
+            # Halt the CPU (and exit the emulator)
+            elif IR == 0b00000001: # HLT
+                break
+            else:
+                print(f'Error: Unknown command: {IR}')
+                sys.exit(1)
