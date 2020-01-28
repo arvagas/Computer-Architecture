@@ -15,11 +15,10 @@ class CPU:
         self.LDI = 0b10000010
         self.PRN = 0b01000111
         self.HLT = 0b00000001
+        self.MUL = 0b10100010
 
     def load(self):
         """Load a program into memory."""
-        
-        address = 0
         # Check to see if there are two arguments
         # Second argument must be the filename of program to load
         if len(sys.argv) != 2:
@@ -38,7 +37,7 @@ class CPU:
                         # Ignore blank lines
                         continue
                     
-                    value = int(num)
+                    value = int(num, 2)
                     self.ram[address] = value
                     address += 1
 
@@ -95,6 +94,12 @@ class CPU:
                 operand_a = self.ram_read(self.pc + 1)
                 operand_b = self.ram_read(self.pc + 2)
                 self.reg[operand_a] = operand_b
+                self.pc += 3
+            # Multiply the values in two registers together and store the result in registerA
+            elif IR is self.MUL:
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+                self.reg[operand_a] = self.reg[operand_a] * self.reg[operand_b]
                 self.pc += 3
             # Print to the console the decimal integer value that is stored in the given register.
             elif IR is self.PRN:
