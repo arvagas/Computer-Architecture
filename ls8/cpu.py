@@ -18,25 +18,33 @@ class CPU:
 
     def load(self):
         """Load a program into memory."""
-
+        
         address = 0
+        # Check to see if there are two arguments
+        # Second argument must be the filename of program to load
+        if len(sys.argv) != 2:
+            print('Usage: file.py <filename>', file=sys.stderr)
+            sys.exit(1)
 
-        # For now, we've just hardcoded a program:
+        try:
+            address = 0
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    # Ignore comments
+                    comment_split = line.split('#')
+                    num = comment_split[0].strip()
+                    
+                    if num == '':
+                        # Ignore blank lines
+                        continue
+                    
+                    value = int(num)
+                    self.ram[address] = value
+                    address += 1
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
-
+        except FileNotFoundError:
+            print(f'{sys.argv[0]}: {sys.argv[1]} not found.')
+            sys.exit(2)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -77,6 +85,7 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+
         while True:
             # Instruction Register (IR)
             IR = self.ram_read(self.pc)
