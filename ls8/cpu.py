@@ -16,14 +16,16 @@ class CPU:
     def __init__(self):
         """Construct a new CPU."""
         self.ram = [0] * 256 # Allocates 256 bytes of memory
-        self.reg = [0] * 8
-        self.pc = 0 # Program counter/accumalator
+        self.reg = [0] * 8 # Register
+        self.pc = 0 # Program counter; points to the current instruction
+        self.sp = 7 # Stack pointer; lives in register spot 7
 
         ########## INSTRUCTION HANDLERS ##########
-        self.LDI = 0b10000010
-        self.PRN = 0b01000111
-        self.HLT = 0b00000001
-        self.MUL = 0b10100010
+        self.LDI  = 0b10000010
+        self.PRN  = 0b01000111
+        self.HLT  = 0b00000001
+        self.PUSH = 0b01000101
+        self.POP  = 0b01000110
 
     def load(self):
         """Load a program into memory."""
@@ -122,12 +124,29 @@ class CPU:
             operand_b = self.ram_read(self.pc + 2)
             
             if IR is self.LDI:
+                # Insert a decimal integer into a register
                 self.reg[operand_a] = operand_b
                 self.pc += 3
             elif IR is self.PRN:
                 # Print to the console the decimal integer value that is
                 # stored in the given register.
                 print(self.reg[operand_a])
+                self.pc += 2
+            elif IR is self.PUSH:
+                # Push the value in the given register on the stack.
+                    # 1. Decrement the SP.
+                    # 2. Copy the value in the given register to the address
+                    # pointed to by SP.
+                self.sp -= 1
+                self.ram[self.sp] = self.reg[operand_a]
+                self.pc += 2
+            elif IR is self.POP:
+                # Pop the value at the top of stack into the given register.
+                    # 1. Copy the value from the address pointed to by SP to
+                    # the given register.
+                    # 2. Increment SP.
+                self.reg[operand_a] = self.ram[self.sp]
+                self.sp += 1
                 self.pc += 2
             elif IR in alu_dict:
                 self.alu(alu_dict[IR], operand_a, operand_b)
