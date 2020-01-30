@@ -26,6 +26,8 @@ class CPU:
         self.HLT  = 0b00000001
         self.PUSH = 0b01000101
         self.POP  = 0b01000110
+        self.CALL = 0b01010000
+        self.RET  = 0b00010001
 
     def load(self):
         """Load a program into memory."""
@@ -133,21 +135,47 @@ class CPU:
                 print(self.reg[operand_a])
                 self.pc += 2
             elif IR is self.PUSH:
-                # Push the value in the given register on the stack.
-                    # 1. Decrement the SP.
-                    # 2. Copy the value in the given register to the address
-                    # pointed to by SP.
+                """
+                Push the value in the given register on the stack.
+                    1. Decrement the SP.
+                    2. Copy the value in the given register to the address
+                    pointed to by SP.
+                """
                 self.sp -= 1
                 self.ram[self.sp] = self.reg[operand_a]
                 self.pc += 2
             elif IR is self.POP:
-                # Pop the value at the top of stack into the given register.
-                    # 1. Copy the value from the address pointed to by SP to
-                    # the given register.
-                    # 2. Increment SP.
+                """
+                Pop the value at the top of stack into the given register.
+                    1. Copy the value from the address pointed to by SP to
+                    the given register.
+                    2. Increment SP.
+                """
                 self.reg[operand_a] = self.ram[self.sp]
                 self.sp += 1
                 self.pc += 2
+            elif IR is self.CALL:
+                """
+                Calls a subroutine at the address stored in the register.
+                    1. The address of the instruction directly after CALL is
+                    pushed onto the stack. This allows us to return to where
+                    we left off when the subroutine finishes executing.
+                    2. The PC is set to the address stored in the given
+                    register. We jump to that location in RAM and execute the
+                    first instruction in the subroutine. The PC can move
+                    forward or backwards from its current location.
+                """
+                # Push return address onto the stack
+                return_address = self.pc + 2
+                self.reg[self.sp] -= 1
+                self.ram[self.reg[self.sp]] = return_address
+                # Set PC to the value in the register
+                self.pc = self.reg[operand_a]
+            elif IR is self.RET:
+                # Return from subroutine.
+                # Pop the value from the top of the stack and store it in the PC.
+                self.pc = self.ram[self.reg[self.sp]]
+                self.reg[self.sp] += 1
             elif IR in alu_dict:
                 self.alu(alu_dict[IR], operand_a, operand_b)
                 self.pc += 3
